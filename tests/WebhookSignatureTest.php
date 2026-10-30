@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use BotMan\Drivers\VonageWhatsApp\Support\WebhookSignature;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Support\WebhookSignature;
 use Firebase\JWT\JWT;
 use PHPUnit\Framework\TestCase;
 

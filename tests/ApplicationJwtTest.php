@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use BotMan\Drivers\VonageWhatsApp\Support\ApplicationJwt;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Support\ApplicationJwt;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use PHPUnit\Framework\TestCase;

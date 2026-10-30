@@ -1,13 +1,13 @@
 # BotMan Vonage WhatsApp Driver
 
-[![Tests](https://github.com/botman/driver-vonage-whatsapp/actions/workflows/tests.yml/badge.svg)](https://github.com/botman/driver-vonage-whatsapp/actions/workflows/tests.yml)
+[![Tests](https://github.com/filippotoso/driver-vonage-whatsapp/actions/workflows/tests.yml/badge.svg)](https://github.com/filippotoso/driver-vonage-whatsapp/actions/workflows/tests.yml)
 
 WhatsApp channel driver for [BotMan](https://github.com/botman/botman) using the [Vonage Messages API](https://developer.vonage.com/en/messages/concepts/whatsapp) (v1).
 
 ## Installation
 
 ```bash
-composer require botman/driver-vonage-whatsapp
+composer require filippotoso/driver-vonage-whatsapp
 ```
 
 Requires PHP **8.1+**, `botman/botman` `^2.0`, and `firebase/php-jwt` `^7` (Application JWT mint + webhook verify).
@@ -17,7 +17,7 @@ Requires PHP **8.1+**, `botman/botman` `^2.0`, and `firebase/php-jwt` `^7` (Appl
 The package registers `VonageWhatsAppServiceProvider` via Composer’s Laravel extras. Publish the config stub:
 
 ```bash
-php artisan vendor:publish --provider="BotMan\Drivers\VonageWhatsApp\Providers\VonageWhatsAppServiceProvider"
+php artisan vendor:publish --provider="FilippoToso\BotMan\Drivers\VonageWhatsApp\Providers\VonageWhatsAppServiceProvider"
 ```
 
 Studio discovery is also available through `discovery.json` (`botman/driver` + `botman/driver-config`).
@@ -26,7 +26,7 @@ Studio discovery is also available through `discovery.json` (`botman/driver` + `
 
 ```php
 use BotMan\BotMan\Drivers\DriverManager;
-use BotMan\Drivers\VonageWhatsApp\VonageWhatsAppDriver;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\VonageWhatsAppDriver;
 
 DriverManager::loadDriver(VonageWhatsAppDriver::class);
 

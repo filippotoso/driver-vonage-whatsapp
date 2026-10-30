@@ -1,9 +1,9 @@
 <?php
 
-namespace BotMan\Drivers\VonageWhatsApp\Providers;
+namespace FilippoToso\BotMan\Drivers\VonageWhatsApp\Providers;
 
 use BotMan\BotMan\Drivers\DriverManager;
-use BotMan\Drivers\VonageWhatsApp\VonageWhatsAppDriver;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\VonageWhatsAppDriver;
 use BotMan\Studio\Providers\StudioServiceProvider;
 use Illuminate\Support\ServiceProvider;
 
@@ -18,11 +18,11 @@ class VonageWhatsAppServiceProvider extends ServiceProvider
             $this->loadDrivers();
 
             $this->publishes([
-                __DIR__.'/../../stubs/vonage_whatsapp.php' => config_path('botman/vonage_whatsapp.php'),
+                __DIR__ . '/../../stubs/vonage_whatsapp.php' => config_path('botman/vonage_whatsapp.php'),
             ]);
 
             $this->mergeConfigFrom(
-                __DIR__.'/../../stubs/vonage_whatsapp.php',
+                __DIR__ . '/../../stubs/vonage_whatsapp.php',
                 'botman.vonage_whatsapp'
             );
         }

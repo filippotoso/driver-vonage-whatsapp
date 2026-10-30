@@ -3,6 +3,6 @@
         "stubs/vonage_whatsapp.php"
     ],
     "botman/driver": [
-        "BotMan\\Drivers\\VonageWhatsApp\\VonageWhatsAppDriver"
+        "FilippoToso\\BotMan\\Drivers\\VonageWhatsApp\\VonageWhatsAppDriver"
     ]
 }

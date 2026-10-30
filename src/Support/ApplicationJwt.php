@@ -1,6 +1,6 @@
 <?php
 
-namespace BotMan\Drivers\VonageWhatsApp\Support;
+namespace FilippoToso\BotMan\Drivers\VonageWhatsApp\Support;
 
 use Firebase\JWT\JWT;
 

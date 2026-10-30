@@ -1,5 +1,5 @@
 {
-    "name": "botman/driver-vonage-whatsapp",
+    "name": "filippotoso/driver-vonage-whatsapp",
     "license": "MIT",
     "description": "Vonage WhatsApp driver for BotMan",
     "keywords": [
@@ -29,7 +29,7 @@
     },
     "autoload": {
         "psr-4": {
-            "BotMan\\Drivers\\VonageWhatsApp\\": "src/"
+            "FilippoToso\\BotMan\\Drivers\\VonageWhatsApp\\": "src/"
         }
     },
     "autoload-dev": {
@@ -43,7 +43,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "BotMan\\Drivers\\VonageWhatsApp\\Providers\\VonageWhatsAppServiceProvider"
+                "FilippoToso\\BotMan\\Drivers\\VonageWhatsApp\\Providers\\VonageWhatsAppServiceProvider"
             ]
         }
     },

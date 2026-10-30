@@ -1,6 +1,6 @@
 <?php
 
-namespace BotMan\Drivers\VonageWhatsApp;
+namespace FilippoToso\BotMan\Drivers\VonageWhatsApp;
 
 use BotMan\BotMan\Drivers\HttpDriver;
 use BotMan\BotMan\Messages\Attachments\Audio;
@@ -13,9 +13,9 @@ use BotMan\BotMan\Messages\Incoming\IncomingMessage;
 use BotMan\BotMan\Messages\Outgoing\OutgoingMessage;
 use BotMan\BotMan\Messages\Outgoing\Question;
 use BotMan\BotMan\Users\User;
-use BotMan\Drivers\VonageWhatsApp\Exceptions\VonageWhatsAppException;
-use BotMan\Drivers\VonageWhatsApp\Support\ApplicationJwt;
-use BotMan\Drivers\VonageWhatsApp\Support\WebhookSignature;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Exceptions\VonageWhatsAppException;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Support\ApplicationJwt;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Support\WebhookSignature;
 use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
@@ -234,7 +234,7 @@ class VonageWhatsAppDriver extends HttpDriver
         $url = rtrim($this->messagesBaseUrl(), '/');
         $endpoint = ltrim((string) $endpoint, '/');
         if ($endpoint !== '') {
-            $url .= '/'.$endpoint;
+            $url .= '/' . $endpoint;
         }
 
         return $this->postJson($url, $parameters);
@@ -514,7 +514,7 @@ class VonageWhatsAppDriver extends HttpDriver
             [],
             $payload,
             [
-                'Authorization: Bearer '.$jwt,
+                'Authorization: Bearer ' . $jwt,
                 'Content-Type: application/json',
                 'Accept: application/json',
             ],
