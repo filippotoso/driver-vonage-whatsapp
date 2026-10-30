@@ -4,3 +4,4 @@
 .phpunit.result.cache
 /.planning/
 /.phpunit.cache
+/update.bat
