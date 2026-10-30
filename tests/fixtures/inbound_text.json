@@ -1,0 +1,13 @@
+{
+    "channel": "whatsapp",
+    "message_uuid": "aaaaaaaa-bbbb-4ccc-8ddd-0123456789ab",
+    "to": "447700900000",
+    "from": "447700900001",
+    "timestamp": "2025-02-03T12:14:25Z",
+    "message_type": "text",
+    "text": "Hello from Vonage!",
+    "profile": {
+        "name": "Jane Smith",
+        "username": "janesmith123"
+    }
+}

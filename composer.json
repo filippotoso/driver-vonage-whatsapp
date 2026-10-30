@@ -1,0 +1,53 @@
+{
+    "name": "botman/driver-vonage-whatsapp",
+    "license": "MIT",
+    "description": "Vonage WhatsApp driver for BotMan",
+    "keywords": [
+        "Bot",
+        "BotMan",
+        "WhatsApp",
+        "Vonage",
+        "Messages API"
+    ],
+    "homepage": "https://github.com/filippotoso/driver-vonage-whatsapp",
+    "authors": [
+        {
+            "name": "Filippo Toso",
+            "email": "filippo@toso.dev"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "ext-openssl": "*",
+        "botman/botman": "^2.0",
+        "ext-json": "*",
+        "firebase/php-jwt": "^7.0"
+    },
+    "require-dev": {
+        "mockery/mockery": "^1.6",
+        "phpunit/phpunit": "^10.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "BotMan\\Drivers\\VonageWhatsApp\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "BotMan\\Drivers\\VonageWhatsApp\\Providers\\VonageWhatsAppServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

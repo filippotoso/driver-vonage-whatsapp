@@ -1,0 +1,18 @@
+{
+    "message_uuid": "ffffffff-bbbb-4ccc-8ddd-0123456789ab",
+    "to": {
+        "type": "whatsapp",
+        "number": "447700900000"
+    },
+    "from": {
+        "type": "whatsapp",
+        "number": "447700900001"
+    },
+    "timestamp": "2025-02-03T12:14:25Z",
+    "message": {
+        "content": {
+            "type": "text",
+            "text": "legacy"
+        }
+    }
+}
