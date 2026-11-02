@@ -14,6 +14,12 @@ use BotMan\BotMan\Messages\Outgoing\OutgoingMessage;
 use BotMan\BotMan\Messages\Outgoing\Question;
 use BotMan\BotMan\Users\User;
 use FilippoToso\BotMan\Drivers\VonageWhatsApp\Exceptions\VonageWhatsAppException;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Extensions\InteractiveMessage;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Extensions\ListMessage;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Extensions\ListRow;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Extensions\ListSection;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Extensions\ReplyButton;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Extensions\ReplyButtons;
 use FilippoToso\BotMan\Drivers\VonageWhatsApp\Support\ApplicationJwt;
 use FilippoToso\BotMan\Drivers\VonageWhatsApp\Support\WebhookSignature;
 use Illuminate\Support\Collection;
@@ -149,7 +155,7 @@ class VonageWhatsAppDriver extends HttpDriver
     }
 
     /**
-     * @param string|Question|OutgoingMessage $message
+     * @param string|Question|OutgoingMessage|InteractiveMessage $message
      * @param IncomingMessage $matchingMessage
      * @param array $additionalParameters
      * @return array
@@ -168,7 +174,19 @@ class VonageWhatsAppDriver extends HttpDriver
             'channel' => 'whatsapp',
         ];
 
-        if ($message instanceof Question) {
+        if ($message instanceof InteractiveMessage) {
+            $parameters['message_type'] = 'custom';
+            $parameters['custom'] = $message->toCustom();
+        } elseif ($message instanceof Question) {
+            $buttons = $message->getButtons();
+            if ($buttons !== []) {
+                return array_merge(
+                    $parameters,
+                    $this->buildInteractiveQuestionPayload($message, $buttons),
+                    $additionalParameters
+                );
+            }
+
             $parameters['message_type'] = 'text';
             $parameters['text'] = $message->getText();
         } elseif ($message instanceof OutgoingMessage) {
@@ -238,6 +256,63 @@ class VonageWhatsAppDriver extends HttpDriver
         }
 
         return $this->postJson($url, $parameters);
+    }
+
+    /**
+     * Map a BotMan Question with actions to a Vonage WhatsApp interactive custom payload.
+     *
+     * ≤3 buttons → reply buttons; more → list message (single section).
+     *
+     * @param Question $question
+     * @param array<int, array<string, mixed>> $buttons
+     * @return array<string, mixed>
+     */
+    protected function buildInteractiveQuestionPayload(Question $question, array $buttons): array
+    {
+        $bodyText = (string) $question->getText();
+
+        if (count($buttons) <= 3) {
+            $replyButtons = ReplyButtons::create($bodyText);
+            foreach ($buttons as $button) {
+                [$id, $title] = $this->buttonIdAndTitle($button);
+                $replyButtons->addButton(ReplyButton::create($id, $title));
+            }
+
+            return [
+                'message_type' => 'custom',
+                'custom' => $replyButtons->toCustom(),
+            ];
+        }
+
+        $section = ListSection::create('Options');
+        foreach ($buttons as $button) {
+            [$id, $title] = $this->buttonIdAndTitle($button);
+            $description = $button['additional']['description'] ?? null;
+            $section->addRow(ListRow::create(
+                $id,
+                $title,
+                is_string($description) && $description !== '' ? $description : null
+            ));
+        }
+
+        return [
+            'message_type' => 'custom',
+            'custom' => ListMessage::create($bodyText, 'Options')
+                ->addSection($section)
+                ->toCustom(),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $button
+     * @return array{0: string, 1: string}
+     */
+    protected function buttonIdAndTitle(array $button): array
+    {
+        $title = (string) ($button['text'] ?? '');
+        $id = (string) ($button['value'] ?? $button['name'] ?? $title);
+
+        return [$id, $title];
     }
 
     /**

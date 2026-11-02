@@ -9,9 +9,15 @@ use BotMan\BotMan\Messages\Attachments\Image;
 use BotMan\BotMan\Messages\Attachments\Location;
 use BotMan\BotMan\Messages\Attachments\Video;
 use BotMan\BotMan\Messages\Incoming\IncomingMessage;
+use BotMan\BotMan\Messages\Outgoing\Actions\Button;
 use BotMan\BotMan\Messages\Outgoing\OutgoingMessage;
 use BotMan\BotMan\Messages\Outgoing\Question;
 use FilippoToso\BotMan\Drivers\VonageWhatsApp\Exceptions\VonageWhatsAppException;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Extensions\ListMessage;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Extensions\ListRow;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Extensions\ListSection;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Extensions\ReplyButton;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Extensions\ReplyButtons;
 use FilippoToso\BotMan\Drivers\VonageWhatsApp\VonageWhatsAppDriver;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
@@ -212,7 +218,7 @@ class VonageWhatsAppDriverTest extends TestCase
         $this->assertSame('Hello', $payload['text']);
     }
 
-    public function test_build_service_payload_question_is_text_only(): void
+    public function test_build_service_payload_question_without_buttons_is_text(): void
     {
         $driver = $this->driverFromFixture('inbound_text.json');
         $payload = $driver->buildServicePayload(
@@ -222,6 +228,186 @@ class VonageWhatsAppDriverTest extends TestCase
 
         $this->assertSame('text', $payload['message_type']);
         $this->assertSame('Pick one', $payload['text']);
+    }
+
+    public function test_build_service_payload_question_with_buttons_is_interactive_reply(): void
+    {
+        $driver = $this->driverFromFixture('inbound_text.json');
+        $question = Question::create('Which time would you like us to deliver your order at?')
+            ->addButtons([
+                Button::create('15:00')->value('slot-1'),
+                Button::create('16:30')->value('slot-2'),
+                Button::create('17:15')->value('slot-3'),
+            ]);
+
+        $payload = $driver->buildServicePayload($question, $driver->getMessages()[0]);
+
+        $this->assertSame('custom', $payload['message_type']);
+        $this->assertSame('interactive', $payload['custom']['type']);
+        $this->assertSame('button', $payload['custom']['interactive']['type']);
+        $this->assertSame(
+            'Which time would you like us to deliver your order at?',
+            $payload['custom']['interactive']['body']['text']
+        );
+        $this->assertSame([
+            [
+                'type' => 'reply',
+                'reply' => ['id' => 'slot-1', 'title' => '15:00'],
+            ],
+            [
+                'type' => 'reply',
+                'reply' => ['id' => 'slot-2', 'title' => '16:30'],
+            ],
+            [
+                'type' => 'reply',
+                'reply' => ['id' => 'slot-3', 'title' => '17:15'],
+            ],
+        ], $payload['custom']['interactive']['action']['buttons']);
+    }
+
+    public function test_build_service_payload_question_with_many_buttons_is_interactive_list(): void
+    {
+        $driver = $this->driverFromFixture('inbound_text.json');
+        $question = Question::create('You will be presented with a list of options')
+            ->addButtons([
+                Button::create('Red')->value('row1')->additionalParameters(['description' => 'Take the red pill']),
+                Button::create('Blue')->value('row2')->additionalParameters(['description' => 'Take the blue pill']),
+                Button::create('Green')->value('row3'),
+                Button::create('Nothing')->value('row4'),
+            ]);
+
+        $payload = $driver->buildServicePayload($question, $driver->getMessages()[0]);
+
+        $this->assertSame('custom', $payload['message_type']);
+        $this->assertSame('list', $payload['custom']['interactive']['type']);
+        $this->assertSame(
+            'You will be presented with a list of options',
+            $payload['custom']['interactive']['body']['text']
+        );
+        $this->assertSame('Options', $payload['custom']['interactive']['action']['button']);
+        $this->assertSame([
+            [
+                'title' => 'Options',
+                'rows' => [
+                    ['id' => 'row1', 'title' => 'Red', 'description' => 'Take the red pill'],
+                    ['id' => 'row2', 'title' => 'Blue', 'description' => 'Take the blue pill'],
+                    ['id' => 'row3', 'title' => 'Green'],
+                    ['id' => 'row4', 'title' => 'Nothing'],
+                ],
+            ],
+        ], $payload['custom']['interactive']['action']['sections']);
+    }
+
+    public function test_build_service_payload_reply_buttons_extension(): void
+    {
+        $driver = $this->driverFromFixture('inbound_text.json');
+        $message = ReplyButtons::create('Which time would you like us to deliver your order at?')
+            ->header('Delivery time')
+            ->footer('Please allow 15 mins either side of your chosen time')
+            ->addButtons([
+                ReplyButton::create('slot-1', '15:00'),
+                ReplyButton::create('slot-2', '16:30'),
+                ReplyButton::create('slot-3', '17:15'),
+            ]);
+
+        $payload = $driver->buildServicePayload($message, $driver->getMessages()[0]);
+
+        $this->assertSame('custom', $payload['message_type']);
+        $this->assertSame([
+            'type' => 'interactive',
+            'interactive' => [
+                'type' => 'button',
+                'header' => ['type' => 'text', 'text' => 'Delivery time'],
+                'body' => ['text' => 'Which time would you like us to deliver your order at?'],
+                'footer' => ['text' => 'Please allow 15 mins either side of your chosen time'],
+                'action' => [
+                    'buttons' => [
+                        ['type' => 'reply', 'reply' => ['id' => 'slot-1', 'title' => '15:00']],
+                        ['type' => 'reply', 'reply' => ['id' => 'slot-2', 'title' => '16:30']],
+                        ['type' => 'reply', 'reply' => ['id' => 'slot-3', 'title' => '17:15']],
+                    ],
+                ],
+            ],
+        ], $payload['custom']);
+    }
+
+    public function test_build_service_payload_list_message_extension(): void
+    {
+        $driver = $this->driverFromFixture('inbound_text.json');
+        $message = ListMessage::create('You will be presented with a list of options', 'Select')
+            ->header('Select which pill you would like')
+            ->footer('There are no wrong choices')
+            ->addSection(
+                ListSection::create('Section A - pills')
+                    ->addRow(ListRow::create('row1', 'Red', 'Take the red pill'))
+                    ->addRow(ListRow::create('row2', 'Blue', 'Take the blue pill'))
+                    ->addRow(ListRow::create('row3', 'Green', 'Take the green pill'))
+            )
+            ->addSection(
+                ListSection::create('Section B - no pills')
+                    ->addRow(ListRow::create('row4', 'Nothing', 'Do not take a pill'))
+            );
+
+        $payload = $driver->buildServicePayload($message, $driver->getMessages()[0]);
+
+        $this->assertSame('custom', $payload['message_type']);
+        $this->assertSame([
+            'type' => 'interactive',
+            'interactive' => [
+                'type' => 'list',
+                'header' => ['type' => 'text', 'text' => 'Select which pill you would like'],
+                'body' => ['text' => 'You will be presented with a list of options'],
+                'footer' => ['text' => 'There are no wrong choices'],
+                'action' => [
+                    'button' => 'Select',
+                    'sections' => [
+                        [
+                            'title' => 'Section A - pills',
+                            'rows' => [
+                                ['id' => 'row1', 'title' => 'Red', 'description' => 'Take the red pill'],
+                                ['id' => 'row2', 'title' => 'Blue', 'description' => 'Take the blue pill'],
+                                ['id' => 'row3', 'title' => 'Green', 'description' => 'Take the green pill'],
+                            ],
+                        ],
+                        [
+                            'title' => 'Section B - no pills',
+                            'rows' => [
+                                ['id' => 'row4', 'title' => 'Nothing', 'description' => 'Do not take a pill'],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ], $payload['custom']);
+    }
+
+    public function test_inbound_list_reply_includes_description_in_payload(): void
+    {
+        $body = json_encode([
+            'channel' => 'whatsapp',
+            'message_uuid' => 'eeeeeeee-bbbb-4ccc-8ddd-0123456789ab',
+            'to' => '447700900000',
+            'from' => '447700900001',
+            'timestamp' => '2025-02-03T12:14:25Z',
+            'message_type' => 'reply',
+            'reply' => [
+                'id' => 'row1',
+                'title' => 'Red',
+                'description' => 'Take the red pill',
+            ],
+        ]);
+        $driver = new VonageWhatsAppDriver(
+            Request::create('/', 'POST', [], [], [], [], $body),
+            $this->baseConfig(),
+            m::mock(Curl::class)
+        );
+        $message = $driver->getMessages()[0];
+        $answer = $driver->getConversationAnswer($message);
+
+        $this->assertTrue($answer->isInteractiveMessageReply());
+        $this->assertSame('row1', $answer->getValue());
+        $this->assertSame('Red', $answer->getText());
+        $this->assertSame('Take the red pill', $message->getPayload()->get('reply')['description']);
     }
 
     public function test_build_service_payload_image_with_caption(): void

@@ -101,13 +101,59 @@ Media URLs are **not** downloaded inside the driver. If Secure Inbound Media is 
 
 | BotMan type | Vonage payload |
 | --- | --- |
-| `string` / `Question` (text only) | `message_type: text` |
+| `string` / `Question` (no buttons) | `message_type: text` |
+| `Question` with 1–3 buttons | interactive reply buttons (`message_type: custom`) |
+| `Question` with 4+ buttons | interactive list (CTA + section title default to `Options`) |
+| `ReplyButtons` / `ListMessage` extensions | interactive custom with optional header/footer/sections |
 | `OutgoingMessage` + Image/Video/File | matching media type; message text → `caption` |
 | `OutgoingMessage` + Audio | `audio` (no caption) |
 
-Pass extra Vonage fields (e.g. `client_ref`) via BotMan `$additionalParameters` (shallow merge).
+Pass extra Vonage fields (e.g. `client_ref`) via BotMan `$additionalParameters` (shallow merge). For a full raw interactive object (including product / carousel), merge a `message_type` + `custom` pair the same way.
 
-**Out of scope for v1:** templates / MTM, interactive buttons/lists outbound, typing/read (`types()`), outbound location/contact, reactions, delivery events in BotMan.
+### Interactive messages
+
+Outbound interactive messages use Vonage `message_type: custom` with `custom.type: interactive`. User taps come back as inbound `message_type: reply` (`reply.id` / `reply.title`, optional `description` for lists) and map to an interactive BotMan `Answer`.
+
+**Reply buttons** (max 3 options):
+
+```php
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Extensions\ReplyButton;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Extensions\ReplyButtons;
+
+$bot->reply(
+    ReplyButtons::create('Which time would you like us to deliver your order at?')
+        ->header('Delivery time')
+        ->footer('Please allow 15 mins either side of your chosen time')
+        ->addButtons([
+            ReplyButton::create('slot-1', '15:00'),
+            ReplyButton::create('slot-2', '16:30'),
+            ReplyButton::create('slot-3', '17:15'),
+        ])
+);
+```
+
+**List messages** (up to 10 options, multi-section):
+
+```php
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Extensions\ListMessage;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Extensions\ListRow;
+use FilippoToso\BotMan\Drivers\VonageWhatsApp\Extensions\ListSection;
+
+$bot->reply(
+    ListMessage::create('You will be presented with a list of options', 'Select')
+        ->header('Select which pill you would like')
+        ->footer('There are no wrong choices')
+        ->addSection(
+            ListSection::create('Section A - pills')
+                ->addRow(ListRow::create('row1', 'Red', 'Take the red pill'))
+                ->addRow(ListRow::create('row2', 'Blue', 'Take the blue pill'))
+        )
+);
+```
+
+BotMan `Question` + `Button` also maps automatically (≤3 → reply buttons, more → single-section list with CTA `Options`). Prefer the extension classes when you need custom CTAs, headers, footers, or multiple list sections.
+
+**Out of scope for v1:** templates / MTM, typing/read (`types()`), outbound location/contact, reactions, delivery events in BotMan, first-class product/carousel builders (send via `$additionalParameters` `custom` if needed).
 
 ### 24-hour customer care window
 
